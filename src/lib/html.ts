@@ -1,7 +1,7 @@
 import type { Idea } from '../types';
 
 const CSP_META =
-  "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; media-src data:; connect-src 'none'; form-action 'none'; base-uri 'none';\" />";
+  "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; media-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'; navigate-to 'none';\" />";
 
 const VIEWPORT_META = '<meta name="viewport" content="width=device-width, initial-scale=1.0" />';
 

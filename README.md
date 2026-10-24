@@ -59,10 +59,12 @@ See the Chinese sections below for configuration, deployment, testing and securi
 - 工具的 iframe 预览带沙箱隔离，不授予 `allow-same-origin`。
 - 保存到本地工具库；刷新后仍在。
 - 打开预览、删除、基于反馈生成新版本，并保留简单版本历史。
+- 支持导出单个 HTML 工具，以及导出/导入全部工具的 JSON 备份（不包含 API Key）。
 - OpenAI-compatible Chat Completions API；设置面板可配置 Base URL、API Key、Model。
 - API Base URL 支持滚动选择常用服务商；带有强特征前缀的 Key 会自动匹配 Base URL。
 - Model 支持按服务商滚动选择常用模型，也保留手动输入任意模型名。
 - 服务商与模型不匹配时，会显示推荐模型并支持一键填入。
+- 设置内提供「测试连接」，会发送一次最小请求验证 URL、CORS、鉴权和模型名。
 - **没有 API Key 时自动使用 Mock 模式**，完整走通整个流程。
 
 ## 快速开始
@@ -100,9 +102,13 @@ npm run typecheck
 
 ## 测试
 
-项目包含 Playwright 冒烟测试，覆盖 Mock 模式完整闭环和设置中的服务商 / Key 识别：
+项目包含两类自动化测试：
+
+- **Vitest 单元测试**：JSON / HTML 提取、CSP 注入、服务商 Key 识别、reasoning 模型请求参数、参数失败重试、备份导入合并。
+- **Playwright 端到端测试**：Mock 模式完整闭环、设置中的服务商 / Key 识别、弹窗焦点陷阱、备份导入导出、移动端布局。
 
 ```bash
+npm run test:unit
 npx playwright install chromium
 npm run test:e2e
 ```
@@ -115,14 +121,14 @@ npm run test:e2e
 ```
 
 `playwright.config.ts` 会在本地自动复用已运行的 dev server，在 CI 中自行启动。
-GitHub Actions 会在构建和部署前运行同一套测试。
+GitHub Actions 会在构建和部署前运行单元测试和端到端测试。
 
 ## 部署到 GitHub Pages
 
 项目使用纯静态产物，不需要后端。已经准备好：
 
-- [.github/workflows/ci.yml](.github/workflows/ci.yml)：类型检查、构建和 Playwright 测试
-- [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml)：测试通过后部署 `dist/`
+- [.github/workflows/ci.yml](.github/workflows/ci.yml)：类型检查、构建、单元测试和 Playwright 测试
+- [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml)：全部测试通过后部署 `dist/`
 - `vite.config.ts` 在生产构建中使用相对资源路径，兼容 GitHub Pages 的子路径
 
 发布步骤：
@@ -181,6 +187,10 @@ Key 前缀识别规则：
 
 自动识别只发生在浏览器本地：不会额外上传或验证 Key。选择服务商后，如果 Model 与对应服务商不匹配，设置中会显示推荐模型，可一键填入。
 
+设置底部的「测试连接」会使用当前草稿配置发送一次最小请求（不保存设置），方便先验证 Base URL、CORS、鉴权和模型名，再开始生成。
+
+请求参数会兼容不同模型：对 GPT-5、o 系列和 `reasoner` 模型不发送 `temperature` / `max_tokens`；普通模型遇到参数相关的 400/422 时会自动用最小兼容参数重试一次。
+
 保存后 Header 会显示「API 模式」。实际请求发往：
 
 ```text
@@ -228,10 +238,23 @@ API Key:  随便填一个非空值，例如 ollama
   ```text
   default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline';
   img-src data: blob:; font-src data:; connect-src 'none';
-  form-action 'none'; base-uri 'none';
+  form-action 'none'; base-uri 'none'; navigate-to 'none';
   ```
 
-  即使模型生成了网络请求代码，也会被 CSP 拦截。
+  即使模型生成了网络请求代码，也会被 CSP 拦截。CSP 还声明了 `navigate-to 'none'`，
+  但浏览器支持并不一致。
+
+  仍然存在无法由父页面完全消除的残余风险：生成代码可能让 iframe 自行导航，
+  或通过死循环消耗 CPU。预览刷新按钮可以重建 iframe；不要把生成结果当作绝对安全的代码执行环境。
+- 工具支持 JSON 备份/导入，但备份只包含工具数据，不包含 API Key。localStorage 被清空时仍可能丢失数据，建议定期导出。
+
+## 工具备份与导出
+
+- 工具卡片上的下载按钮会导出当前版本的单文件 `.html`。
+- 「导出备份」会下载包含全部工具和版本的 JSON；「导入备份」按 `id` 合并，较旧的同 ID 记录不会覆盖较新版本。
+- 备份文件不包含 API Key。导入文件限制为 8 MB。
+
+![我的工具与备份](docs/screenshot-library.png)
 
 ## LLM 调用与输出处理
 
@@ -307,11 +330,16 @@ friction2tool/
 ├── .github/
 │   ├── dependabot.yml
 │   └── workflows/
-│       ├── ci.yml               # build + Playwright smoke test
+│       ├── ci.yml               # build + unit + Playwright tests
 │       └── deploy-pages.yml     # test + deploy dist to GitHub Pages
 ├── docs/                        # screenshots, social preview, publishing guide
 ├── tests/
-│   └── smoke.spec.ts            # Mock flow + provider/key settings
+│   ├── smoke.spec.ts            # E2E: full flow, modal focus, backup, mobile
+│   └── unit/
+│       ├── backup.test.ts
+│       ├── html.test.ts
+│       ├── llm.test.ts
+│       └── models.test.ts
 ├── index.html
 ├── src/
 │   ├── main.tsx
@@ -340,11 +368,13 @@ friction2tool/
 │       ├── prompts.ts          # 两次调用的提示词
 │       ├── mock.ts             # Mock 方案和可交互 HTML
 │       ├── models.ts           # 常用服务商、Base URL、模型与 Key 识别规则
+│       ├── backup.ts           # 单工具导出、JSON 备份/导入与合并
 │       ├── settingsLink.ts     # 设置入口与 URL 兜底
 │       ├── html.ts             # JSON/HTML 提取、校验、CSP 注入
 │       ├── storage.ts          # localStorage 与配额错误
 │       └── format.ts
 ├── playwright.config.ts
+├── vitest.config.ts
 ├── tailwind.config.js
 ├── postcss.config.js
 ├── vite.config.ts
@@ -394,6 +424,7 @@ API 模式：
 ```bash
 npm run typecheck
 npm run build
+npm run test:unit
 npm run test:e2e
 ```
 

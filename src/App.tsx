@@ -15,6 +15,13 @@ import {
   TrashIcon,
 } from './components/Icons';
 import { deriveTags, errorMessage, makeId, truncate } from './lib/format';
+import {
+  downloadTextFile,
+  mergeImportedTools,
+  parseBackup,
+  safeFilename,
+  serializeBackup,
+} from './lib/backup';
 import { generateIdeas, generateTool } from './lib/llm';
 import {
   loadSavedTools,
@@ -248,6 +255,60 @@ export default function App() {
     notify('success', '工具已删除。');
   }
 
+  function handleExportTool(tool: SavedTool) {
+    downloadTextFile(
+      `${safeFilename(tool.title)}.html`,
+      tool.html,
+      'text/html;charset=utf-8',
+    );
+    notify('success', 'HTML 工具已导出。');
+  }
+
+  function handleExportBackup() {
+    if (savedTools.length === 0) return;
+    const date = new Date().toISOString().slice(0, 10);
+    downloadTextFile(
+      `friction2tool-backup-${date}.json`,
+      serializeBackup(savedTools),
+      'application/json;charset=utf-8',
+    );
+    notify('success', '工具备份已导出。备份不包含 API Key。');
+  }
+
+  async function handleImportBackup(file: File) {
+    if (file.size > 8 * 1024 * 1024) {
+      notify('error', '备份文件超过 8 MB，无法导入。');
+      return;
+    }
+
+    try {
+      const parsed = parseBackup(await file.text());
+      const merged = mergeImportedTools(savedTools, parsed.tools);
+
+      if (merged.added === 0 && merged.updated === 0) {
+        notify('info', '备份中没有比当前版本更新的工具，未做修改。');
+        return;
+      }
+
+      try {
+        persistSavedTools(merged.tools);
+      } catch (error) {
+        notify('error', storageErrorMessage(error, '导入备份'));
+        return;
+      }
+
+      setSavedTools(merged.tools);
+
+      const skipped = parsed.invalidCount > 0 ? `，跳过 ${parsed.invalidCount} 条无效记录` : '';
+      notify(
+        'success',
+        `导入完成：新增 ${merged.added} 个，更新 ${merged.updated} 个${skipped}。`,
+      );
+    } catch (error) {
+      notify('error', errorMessage(error, '备份导入失败。'));
+    }
+  }
+
   return (
     <div className="min-h-screen">
       <Header
@@ -261,7 +322,7 @@ export default function App() {
           <div className="flex flex-col gap-6 border-b border-ink/10 pb-8 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
-                <span className="text-accent">Friction → Tool</span>
+                <span className="text-accent-deep">Friction → Tool</span>
                 <span className="h-px w-5 bg-line" aria-hidden="true" />
                 <span>单文件微工具工作台</span>
               </p>
@@ -272,7 +333,7 @@ export default function App() {
                 写下一句具体的烦恼，先拿到 3 个足够小的方案；选一个，生成可以直接运行的单文件
                 HTML。无需登录，无需后端。
               </p>
-              <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[9px] uppercase tracking-[0.09em] text-muted/85">
+              <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[9px] uppercase tracking-[0.09em] text-muted">
                 <span>no login</span>
                 <span className="text-line">/</span>
                 <span>no backend</span>
@@ -306,7 +367,7 @@ export default function App() {
         <section id="ideas" aria-labelledby="ideas-title" className="mt-12 scroll-mt-24">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent-deep">
                 02 / Select
               </p>
               <h2
@@ -447,6 +508,9 @@ export default function App() {
           onPreview={(tool) => setDetailToolId(tool.id)}
           onIterate={(tool) => setDetailToolId(tool.id)}
           onDelete={(tool) => setPendingDelete(tool)}
+          onExportTool={handleExportTool}
+          onExportBackup={handleExportBackup}
+          onImportBackup={handleImportBackup}
         />
 
         <footer className="mt-16 flex flex-col gap-2 border-t border-ink/10 py-7 font-mono text-[9px] uppercase tracking-[0.07em] text-muted sm:flex-row sm:items-center sm:justify-between">

@@ -78,9 +78,12 @@ Suggested release notes:
 Initial public MVP.
 
 - Mock mode completes the full friction -> ideas -> HTML tool flow without an API key.
-- OpenAI-compatible API settings with provider/model presets and partial key-prefix detection.
+- OpenAI-compatible API settings with provider/model presets, partial key-prefix detection and a connection test.
+- Reasoning-model request compatibility and automatic minimal-parameter fallback.
 - Sandboxed iframe preview with no-network CSP.
 - localStorage persistence, feedback iteration and simple version history.
+- HTML export plus JSON backup/restore.
+- Accessible modal focus handling; unit and Playwright test suites.
 - GitHub Pages deployment and Playwright smoke tests.
 ```
 

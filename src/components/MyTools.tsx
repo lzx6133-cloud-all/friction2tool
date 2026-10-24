@@ -1,12 +1,15 @@
+import { useRef, useState, type ChangeEvent } from 'react';
 import type { SavedTool } from '../types';
 import { formatDateTime } from '../lib/format';
 import {
   ClockIcon,
+  DownloadIcon,
   EyeIcon,
   LayersIcon,
   PlusIcon,
   RefreshIcon,
   TrashIcon,
+  UploadIcon,
 } from './Icons';
 
 interface MyToolsProps {
@@ -14,14 +17,41 @@ interface MyToolsProps {
   onPreview: (tool: SavedTool) => void;
   onIterate: (tool: SavedTool) => void;
   onDelete: (tool: SavedTool) => void;
+  onExportTool: (tool: SavedTool) => void;
+  onExportBackup: () => void;
+  onImportBackup: (file: File) => Promise<void>;
 }
 
-export function MyTools({ tools, onPreview, onIterate, onDelete }: MyToolsProps) {
+export function MyTools({
+  tools,
+  onPreview,
+  onIterate,
+  onDelete,
+  onExportTool,
+  onExportBackup,
+  onImportBackup,
+}: MyToolsProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importing, setImporting] = useState(false);
+
+  async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    setImporting(true);
+    try {
+      await onImportBackup(file);
+    } finally {
+      setImporting(false);
+    }
+  }
+
   return (
     <section id="my-tools" aria-labelledby="my-tools-title" className="mt-16 scroll-mt-24">
       <div className="flex flex-wrap items-end justify-between gap-3 border-t border-ink/15 pt-10">
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent">
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent-deep">
             04 / Library
           </p>
           <div className="mt-2 flex items-baseline gap-2.5">
@@ -39,10 +69,40 @@ export function MyTools({ tools, onPreview, onIterate, onDelete }: MyToolsProps)
             保存在当前浏览器 localStorage，刷新页面后仍然在。
           </p>
         </div>
-        <span className="flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-muted">
-          <LayersIcon size={12} />
-          local only
-        </span>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-muted">
+            <LayersIcon size={12} />
+            local only
+          </span>
+          <button
+            type="button"
+            onClick={onExportBackup}
+            disabled={tools.length === 0}
+            className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-ink/15 bg-surface px-2.5 py-1.5 text-[11px] font-medium text-ink transition-colors hover:border-ink/30 hover:bg-white disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            <DownloadIcon size={13} />
+            导出备份
+          </button>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={importing}
+            className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-ink/15 bg-surface px-2.5 py-1.5 text-[11px] font-medium text-ink transition-colors hover:border-ink/30 hover:bg-white disabled:cursor-wait disabled:opacity-60"
+          >
+            <UploadIcon size={13} />
+            {importing ? '导入中…' : '导入备份'}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json,application/json"
+            onChange={(event) => void handleFileChange(event)}
+            className="sr-only"
+            tabIndex={-1}
+            aria-label="选择备份 JSON 文件"
+          />
+        </div>
       </div>
 
       {tools.length === 0 ? (
@@ -98,7 +158,7 @@ export function MyTools({ tools, onPreview, onIterate, onDelete }: MyToolsProps)
                   {tool.friction}
                 </p>
 
-                <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-4 text-[10px] text-muted/85">
+                <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-4 text-[10px] text-muted">
                   <span className="inline-flex items-center gap-1">
                     <ClockIcon size={11} />
                     创建于 {formatDateTime(tool.createdAt)}
@@ -126,6 +186,15 @@ export function MyTools({ tools, onPreview, onIterate, onDelete }: MyToolsProps)
                   >
                     <RefreshIcon size={14} />
                     迭代
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onExportTool(tool)}
+                    className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-transparent text-muted transition-colors hover:border-ink/20 hover:bg-white hover:text-ink"
+                    aria-label={`导出「${tool.title}」HTML`}
+                    title="导出单个 HTML"
+                  >
+                    <DownloadIcon size={15} />
                   </button>
                   <button
                     type="button"

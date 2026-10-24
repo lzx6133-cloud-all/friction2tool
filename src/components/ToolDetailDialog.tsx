@@ -195,7 +195,7 @@ export function ToolDetailDialog({
             rows={3}
             maxLength={500}
             placeholder="例如：把按钮做得更大；再加一个「清空全部」按钮。"
-            className="scrollbar-thin mt-3 min-h-[88px] w-full resize-y rounded-lg border border-line bg-white px-3.5 py-2.5 text-xs leading-relaxed text-ink placeholder:text-muted/50 transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15 disabled:bg-paper/60"
+            className="scrollbar-thin mt-3 min-h-[88px] w-full resize-y rounded-lg border border-line bg-white px-3.5 py-2.5 text-xs leading-relaxed text-ink placeholder:text-muted transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15 disabled:bg-paper/60"
           />
           <div className="mt-3 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-[10px] text-muted">

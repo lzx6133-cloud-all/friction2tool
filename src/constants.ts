@@ -21,3 +21,4 @@ export const HTML_TEMPERATURE = 0.4;
 
 export const IDEAS_TIMEOUT_MS = 45_000;
 export const HTML_TIMEOUT_MS = 120_000;
+export const CONNECTION_TIMEOUT_MS = 30_000;

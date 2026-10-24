@@ -4,6 +4,7 @@ const localChannel = process.env.PLAYWRIGHT_CHANNEL;
 
 export default defineConfig({
   testDir: './tests',
+  testMatch: '**/*.spec.ts',
   timeout: 60_000,
   expect: {
     timeout: 12_000,

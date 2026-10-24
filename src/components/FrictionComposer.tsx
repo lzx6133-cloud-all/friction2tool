@@ -37,7 +37,7 @@ export function FrictionComposer({
       <form onSubmit={handleSubmit}>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent-deep">
               01 / Input
             </p>
             <h2
@@ -81,11 +81,11 @@ export function FrictionComposer({
             placeholder="例如：每次买菜前都想不起家里还有什么。"
             disabled={loading}
             aria-describedby="friction-help"
-            className="scrollbar-thin min-h-[122px] w-full resize-y rounded-xl border border-line bg-white px-4 py-3.5 pb-9 text-[15px] leading-relaxed text-ink placeholder:text-muted/50 transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15 disabled:bg-paper/60"
+            className="scrollbar-thin min-h-[122px] w-full resize-y rounded-xl border border-line bg-white px-4 py-3.5 pb-9 text-[15px] leading-relaxed text-ink placeholder:text-muted transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15 disabled:bg-paper/60"
           />
           <span
             className={`pointer-events-none absolute bottom-3 right-3.5 font-mono text-[10px] tabular-nums ${
-              friction.length > FRICTION_MAX_LENGTH - 40 ? 'text-accent' : 'text-muted/60'
+              friction.length > FRICTION_MAX_LENGTH - 40 ? 'text-accent-deep' : 'text-muted'
             }`}
           >
             {friction.length}/{FRICTION_MAX_LENGTH}

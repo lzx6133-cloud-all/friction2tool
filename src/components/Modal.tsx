@@ -11,6 +11,24 @@ interface ModalProps {
   maxWidthClass?: string;
 }
 
+const FOCUSABLE_SELECTOR = [
+  'a[href]',
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(',');
+
+function getFocusableElements(container: HTMLElement): HTMLElement[] {
+  return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+    (element) =>
+      !element.hasAttribute('hidden') &&
+      element.getAttribute('aria-hidden') !== 'true' &&
+      element.getClientRects().length > 0,
+  );
+}
+
 export function Modal({
   open,
   onClose,
@@ -22,27 +40,88 @@ export function Modal({
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const openedAtRef = useRef(0);
+  const triggerRef = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!open) return;
 
-    openedAtRef.current = Date.now();
+    const dialog = dialogRef.current;
+    const appRoot = document.getElementById('root');
     const previousOverflow = document.body.style.overflow;
+    const rootHadInert = appRoot?.hasAttribute('inert') ?? false;
+    const previousAriaHidden = appRoot?.getAttribute('aria-hidden') ?? null;
+
+    openedAtRef.current = Date.now();
+    triggerRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
     document.body.style.overflow = 'hidden';
+    // The dialog is portaled outside #root, so the app behind it can be made
+    // non-interactive and invisible to assistive technology.
+    appRoot?.setAttribute('inert', '');
+    appRoot?.setAttribute('aria-hidden', 'true');
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onCloseRef.current();
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+
+      const focusable = dialog ? getFocusableElements(dialog) : [];
+      if (!dialog || focusable.length === 0) {
+        event.preventDefault();
+        dialog?.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+
+      if (active === dialog || !(active instanceof Node) || !dialog.contains(active)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+        return;
+      }
+
+      if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    const focusTimer = window.setTimeout(() => dialogRef.current?.focus(), 30);
+    const focusTimer = window.setTimeout(() => dialog?.focus(), 30);
 
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener('keydown', handleKeyDown);
       window.clearTimeout(focusTimer);
+
+      if (appRoot) {
+        if (!rootHadInert) appRoot.removeAttribute('inert');
+        if (previousAriaHidden === null) appRoot.removeAttribute('aria-hidden');
+        else appRoot.setAttribute('aria-hidden', previousAriaHidden);
+      }
+
+      const trigger = triggerRef.current;
+      triggerRef.current = null;
+      if (trigger?.isConnected) {
+        window.setTimeout(() => trigger.focus(), 0);
+      }
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 

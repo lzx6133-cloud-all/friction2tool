@@ -171,7 +171,7 @@ export function PresetCombobox({
               : undefined
           }
           placeholder={placeholder}
-          className="w-full rounded-lg border border-line bg-white py-2.5 pl-3.5 pr-11 font-mono text-sm text-ink placeholder:font-sans placeholder:text-muted/55 transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15"
+          className="w-full rounded-lg border border-line bg-white py-2.5 pl-3.5 pr-11 font-mono text-sm text-ink placeholder:font-sans placeholder:text-muted transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15"
         />
         <button
           type="button"

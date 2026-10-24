@@ -14,18 +14,24 @@ export function Header({ mockMode, model, onOpenSettings }: HeaderProps) {
         <a
           href="#top"
           className="group flex items-center gap-2.5 rounded-md"
-          aria-label="Friction2Tool 首页"
         >
-          <span className="grid h-8 w-8 place-items-center rounded-[9px] bg-ink text-[13px] font-semibold text-paper shadow-[inset_0_-2px_0_rgba(255,255,255,0.12)]">
+          <span
+            className="grid h-8 w-8 place-items-center rounded-[9px] bg-ink text-[13px] font-semibold text-paper shadow-[inset_0_-2px_0_rgba(255,255,255,0.12)]"
+            aria-hidden="true"
+          >
             F<span className="text-accent">.</span>
           </span>
           <span className="flex items-baseline gap-2">
             <span className="text-[15px] font-semibold tracking-[-0.025em] text-ink">
               Friction2Tool
             </span>
-            <span className="hidden font-mono text-[9px] uppercase tracking-[0.16em] text-muted sm:inline">
+            <span
+              className="hidden font-mono text-[9px] uppercase tracking-[0.16em] text-muted sm:inline"
+              aria-hidden="true"
+            >
               MVP
             </span>
+            <span className="sr-only">首页</span>
           </span>
         </a>
 

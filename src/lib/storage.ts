@@ -35,7 +35,7 @@ function isToolVersion(value: unknown): value is ToolVersion {
   );
 }
 
-function isSavedTool(value: unknown): value is SavedTool {
+export function isSavedTool(value: unknown): value is SavedTool {
   if (!isRecord(value)) return false;
   return (
     typeof value.id === 'string' &&

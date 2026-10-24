@@ -10,6 +10,7 @@ export default {
         muted: '#706d64',
         line: '#d9d5ca',
         accent: '#e15a2b',
+        'accent-deep': '#a8431f',
         'accent-soft': '#f8e5dc',
         sage: '#dfe7d8',
         danger: '#b43320',

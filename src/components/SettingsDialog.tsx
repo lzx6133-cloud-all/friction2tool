@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import type { ApiSettings } from '../types';
 import { errorMessage } from '../lib/format';
+import { testApiConnection } from '../lib/llm';
 import {
   detectProviderFromApiKey,
   findProviderByBaseUrl,
@@ -9,7 +10,7 @@ import {
   normalizeBaseUrl,
 } from '../lib/models';
 import { BaseUrlCombobox } from './BaseUrlCombobox';
-import { EyeIcon, EyeOffIcon, KeyIcon } from './Icons';
+import { AlertIcon, CheckIcon, EyeIcon, EyeOffIcon, KeyIcon } from './Icons';
 import { Modal } from './Modal';
 import { ModelCombobox } from './ModelCombobox';
 
@@ -29,12 +30,19 @@ export function SettingsDialog({
   const [draft, setDraft] = useState<ApiSettings>(settings);
   const [showKey, setShowKey] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{
+    kind: 'success' | 'error';
+    text: string;
+  } | null>(null);
 
   useEffect(() => {
     if (!open) return;
     setDraft(settings);
     setShowKey(false);
     setError(null);
+    setTesting(false);
+    setTestResult(null);
   }, [open, settings]);
 
   const mockMode = !draft.apiKey.trim();
@@ -52,6 +60,7 @@ export function SettingsDialog({
 
   function handleApiKeyChange(value: string) {
     const provider = detectProviderFromApiKey(value);
+    setTestResult(null);
 
     setDraft((current) => {
       if (!provider) return { ...current, apiKey: value };
@@ -74,6 +83,49 @@ export function SettingsDialog({
         apiBaseUrl: provider.baseUrl,
       };
     });
+  }
+
+  async function handleTestConnection() {
+    if (testing) return;
+    setTestResult(null);
+
+    const next: ApiSettings = {
+      apiBaseUrl: draft.apiBaseUrl.trim().replace(/\/+$/, ''),
+      apiKey: draft.apiKey.trim(),
+      model: draft.model.trim(),
+    };
+
+    if (!next.apiKey) {
+      setTestResult({
+        kind: 'error',
+        text: 'Mock 模式不需要连接测试。填写 API Key 后再测试。',
+      });
+      return;
+    }
+
+    if (!next.apiBaseUrl || !next.model) {
+      setTestResult({
+        kind: 'error',
+        text: '请先填写完整的 API Base URL 和 Model。',
+      });
+      return;
+    }
+
+    setTesting(true);
+    try {
+      const answer = await testApiConnection(next);
+      setTestResult({
+        kind: 'success',
+        text: `连接成功 · 模型返回：${answer}`,
+      });
+    } catch (testError) {
+      setTestResult({
+        kind: 'error',
+        text: errorMessage(testError, '连接测试失败，请检查配置。'),
+      });
+    } finally {
+      setTesting(false);
+    }
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -138,9 +190,10 @@ export function SettingsDialog({
           </label>
           <BaseUrlCombobox
             value={draft.apiBaseUrl}
-            onChange={(apiBaseUrl) =>
-              setDraft((current) => ({ ...current, apiBaseUrl }))
-            }
+            onChange={(apiBaseUrl) => {
+              setDraft((current) => ({ ...current, apiBaseUrl }));
+              setTestResult(null);
+            }}
           />
         </div>
 
@@ -162,7 +215,7 @@ export function SettingsDialog({
               value={draft.apiKey}
               onChange={(event) => handleApiKeyChange(event.target.value)}
               placeholder="留空则自动使用 Mock 模式"
-              className="w-full rounded-lg border border-line bg-white py-2.5 pl-3.5 pr-11 font-mono text-sm text-ink placeholder:font-sans placeholder:text-muted/55 transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15"
+              className="w-full rounded-lg border border-line bg-white py-2.5 pl-3.5 pr-11 font-mono text-sm text-ink placeholder:font-sans placeholder:text-muted transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15"
             />
             <button
               type="button"
@@ -202,9 +255,10 @@ export function SettingsDialog({
           </label>
           <ModelCombobox
             value={draft.model}
-            onChange={(model) =>
-              setDraft((current) => ({ ...current, model }))
-            }
+            onChange={(model) => {
+              setDraft((current) => ({ ...current, model }));
+              setTestResult(null);
+            }}
           />
           {baseProvider && !modelMatchesBase ? (
             <div className="mt-2 flex flex-col gap-1.5 rounded-lg border border-[#e7d8c2] bg-[#faf5e9] px-3 py-2 text-[11px] leading-relaxed text-[#6d5a3a] sm:flex-row sm:items-center sm:justify-between">
@@ -214,12 +268,13 @@ export function SettingsDialog({
               </span>
               <button
                 type="button"
-                onClick={() =>
+                onClick={() => {
                   setDraft((current) => ({
                     ...current,
                     model: baseProvider.defaultModel,
-                  }))
-                }
+                  }));
+                  setTestResult(null);
+                }}
                 className="shrink-0 text-left font-medium underline decoration-[#c9b89d] underline-offset-2 transition-colors hover:text-ink"
               >
                 填入推荐模型
@@ -257,20 +312,66 @@ export function SettingsDialog({
           </p>
         ) : null}
 
-        <div className="flex flex-col-reverse gap-2 border-t border-line pt-4 sm:flex-row sm:justify-end">
-          <button
-            type="button"
-            onClick={onClose}
-            className="min-h-10 rounded-lg border border-ink/15 bg-surface px-4 py-2 text-xs font-medium text-ink transition-colors hover:bg-white"
+        {testResult ? (
+          <div
+            role="status"
+            aria-live="polite"
+            className={`flex items-start gap-2 rounded-lg border px-3.5 py-2.5 text-xs leading-relaxed ${
+              testResult.kind === 'success'
+                ? 'border-[#c6d2ba] bg-sage/60 text-[#405638]'
+                : 'border-danger/25 bg-[#fbeae6] text-danger'
+            }`}
           >
-            取消
-          </button>
-          <button
-            type="submit"
-            className="min-h-10 rounded-lg bg-ink px-4 py-2 text-xs font-medium text-paper transition-colors hover:bg-[#33332d]"
-          >
-            保存设置
-          </button>
+            {testResult.kind === 'success' ? (
+              <CheckIcon size={14} className="mt-0.5 shrink-0" />
+            ) : (
+              <AlertIcon size={14} className="mt-0.5 shrink-0" />
+            )}
+            <p>{testResult.text}</p>
+          </div>
+        ) : null}
+
+        <div className="flex flex-col gap-3 border-t border-line pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={handleTestConnection}
+              disabled={testing || mockMode}
+              title={mockMode ? 'Mock 模式不需要连接测试' : '会发送一次最小 API 请求'}
+              className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-ink/15 bg-surface px-3.5 py-2 text-xs font-medium text-ink transition-colors hover:border-ink/30 hover:bg-white disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              {testing ? (
+                <>
+                  <span
+                    className="h-3 w-3 animate-spin rounded-full border-2 border-muted/30 border-t-muted"
+                    aria-hidden="true"
+                  />
+                  测试中…
+                </>
+              ) : (
+                '测试连接'
+              )}
+            </button>
+            <span className="text-[10px] text-muted">
+              {mockMode ? 'Mock 模式无需测试' : '会发送一次最小请求，不保存设置'}
+            </span>
+          </div>
+
+          <div className="flex flex-col-reverse gap-2 sm:flex-row">
+            <button
+              type="button"
+              onClick={onClose}
+              className="min-h-10 rounded-lg border border-ink/15 bg-surface px-4 py-2 text-xs font-medium text-ink transition-colors hover:bg-white"
+            >
+              取消
+            </button>
+            <button
+              type="submit"
+              className="min-h-10 rounded-lg bg-ink px-4 py-2 text-xs font-medium text-paper transition-colors hover:bg-[#33332d]"
+            >
+              保存设置
+            </button>
+          </div>
         </div>
       </form>
     </Modal>

@@ -33,6 +33,10 @@ test('mock mode completes generate, save, iterate and delete flow', async ({ pag
   await page.getByRole('button', { name: '保存工具' }).click();
   await expect(page.getByRole('button', { name: '已保存' })).toBeVisible();
 
+  const htmlDownload = page.waitForEvent('download');
+  await page.getByRole('button', { name: /导出「/ }).click();
+  expect((await htmlDownload).suggestedFilename()).toMatch(/\.html$/);
+
   const stored = await page.evaluate(() =>
     JSON.parse(localStorage.getItem('friction2tool.tools.v1') || '[]'),
   );
@@ -72,6 +76,7 @@ test('mock mode completes generate, save, iterate and delete flow', async ({ pag
 test('provider presets and key prefix detection configure settings', async ({ page }) => {
   await page.getByRole('link', { name: '设置', exact: true }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.getByRole('button', { name: '测试连接' })).toBeDisabled();
 
   await page.locator('#api-base-url').click();
   const providerList = page.getByRole('listbox', { name: '常用 API 服务' });
@@ -91,6 +96,7 @@ test('provider presets and key prefix detection configure settings', async ({ pa
   await expect(page.getByText(/已根据 Key 前缀识别为 Groq/)).toBeVisible();
   await page.getByRole('button', { name: '填入推荐模型' }).click();
   await expect(page.locator('#api-model')).toHaveValue('llama-3.3-70b-versatile');
+  await expect(page.getByRole('button', { name: '测试连接' })).toBeEnabled();
 
   await page.getByRole('button', { name: '保存设置' }).click();
   await expect(page.getByRole('dialog')).toBeHidden();
@@ -101,4 +107,112 @@ test('provider presets and key prefix detection configure settings', async ({ pa
   expect(settings.apiBaseUrl).toBe('https://api.groq.com/openai/v1');
   expect(settings.model).toBe('llama-3.3-70b-versatile');
   expect(settings.apiKey).toBe('gsk_test_key');
+});
+
+test('settings dialog traps focus and restores it after closing', async ({ page }) => {
+  const settingsLink = page.getByRole('link', { name: '设置', exact: true });
+  await settingsLink.focus();
+  await settingsLink.press('Enter');
+
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toBeFocused();
+
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('button', { name: '关闭', exact: true })).toBeFocused();
+
+  for (let index = 0; index < 12; index += 1) {
+    await page.keyboard.press('Tab');
+    const focusIsInsideDialog = await page.evaluate(() =>
+      Boolean(document.activeElement?.closest('[role="dialog"]')),
+    );
+    expect(focusIsInsideDialog).toBe(true);
+  }
+
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+  await expect(settingsLink).toBeFocused();
+});
+
+test('imports a JSON backup and exports it again', async ({ page }) => {
+  const now = Date.now();
+  const importedTool = {
+    id: 'imported-tool-1',
+    title: '导入的测试工具',
+    friction: '每次测试都要手写备份。',
+    idea: {
+      title: '导入的测试工具',
+      problem: '测试导入',
+      howItWorks: '导入后确认',
+      whySmall: '只有一组数据',
+    },
+    html: '<!doctype html><html><head><title>Imported</title></head><body><h1>Imported</h1></body></html>',
+    tags: ['测试'],
+    createdAt: now,
+    updatedAt: now,
+    versions: [],
+  };
+
+  await page.locator('input[type="file"]').setInputFiles({
+    name: 'backup.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify([importedTool]), 'utf8'),
+  });
+
+  await expect(page.getByText('导入的测试工具', { exact: true })).toBeVisible();
+  await expect(page.getByText(/导入完成：新增 1 个/)).toBeVisible();
+
+  const stored = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem('friction2tool.tools.v1') || '[]'),
+  );
+  expect(stored).toHaveLength(1);
+  expect(stored[0].id).toBe('imported-tool-1');
+
+  const backupDownload = page.waitForEvent('download');
+  await page.getByRole('button', { name: '导出备份' }).click();
+  expect((await backupDownload).suggestedFilename()).toMatch(
+    /^friction2tool-backup-.*\.json$/,
+  );
+});
+
+test.describe('mobile layout', () => {
+  test.use({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+  });
+
+  test('has no horizontal overflow and scrolls provider presets', async ({ page }) => {
+    await expect(
+      page.getByRole('heading', { name: '把小摩擦，做成顺手的小工具。' }),
+    ).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth > window.innerWidth + 1,
+      ),
+    ).toBe(false);
+
+    await page.getByRole('link', { name: '设置', exact: true }).tap();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await page.locator('#api-base-url').tap();
+
+    const providers = page.getByRole('listbox', { name: '常用 API 服务' });
+    await expect(providers).toBeVisible();
+    const metrics = await providers.evaluate((element) => ({
+      clientHeight: element.clientHeight,
+      scrollHeight: element.scrollHeight,
+    }));
+    expect(metrics.scrollHeight).toBeGreaterThan(metrics.clientHeight);
+
+    await providers.getByRole('option', { name: /^DeepSeek/ }).tap();
+    await expect(page.locator('#api-base-url')).toHaveValue(
+      'https://api.deepseek.com/v1',
+    );
+
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth > window.innerWidth + 1,
+      ),
+    ).toBe(false);
+  });
 });

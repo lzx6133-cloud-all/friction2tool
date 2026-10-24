@@ -31,7 +31,7 @@ export function ToolPreview({
     <section id="preview" aria-labelledby="preview-title" className="mt-12 scroll-mt-24">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent">
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent-deep">
             03 / Preview
           </p>
           <h2
