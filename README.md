@@ -7,7 +7,7 @@
 这是一个前端-only 的 MVP：**无登录、无后端、无数据库**。所有工具保存在浏览器 `localStorage`。
 
 <p>
-  <a href="https://YOUR_GITHUB_USERNAME.github.io/friction2tool/"><strong>Live Demo</strong></a> ·
+  <a href="https://lzx633-cloud-all.github.io/friction2tool/"><strong>Live Demo</strong></a> ·
   <a href="#功能">功能</a> ·
   <a href="#快速开始">快速开始</a> ·
   <a href="#测试">测试</a> ·
@@ -16,11 +16,12 @@
 </p>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![CI](https://github.com/lzx633-cloud-all/friction2tool/actions/workflows/ci.yml/badge.svg)](https://github.com/lzx633-cloud-all/friction2tool/actions/workflows/ci.yml)
 
+> **Live Demo:** the Pages link becomes available after the first deployment of this repository.
+>
 > **Status: experimental, local-first MVP.** Not production-ready. API Keys are stored
 > unencrypted in the visitor's browser, and browser-direct API calls require provider CORS.
->
-> **Before publishing:** replace `YOUR_GITHUB_USERNAME` in the demo link after enabling GitHub Pages.
 
 <details>
 <summary><strong>English summary</strong></summary>
@@ -138,7 +139,7 @@ GitHub Actions 会在构建和部署前运行单元测试和端到端测试。
 3. 打开仓库 **Settings → Pages → Build and deployment → Source**，选择 **GitHub Actions**。
 4. 手动运行一次 **Deploy to GitHub Pages** workflow，或向 `main` 推送一次。
 5. 部署地址通常是 `https://<你的用户名>.github.io/friction2tool/`。
-6. 把 README 顶部的 `YOUR_GITHUB_USERNAME` 替换成实际用户名。
+6. 首次部署完成后确认顶部 Live Demo 地址可访问。
 7. 在 **Settings → General → Social preview** 上传 [docs/social-preview.png](docs/social-preview.png)。
 
 完整的仓库创建、GitHub 设置、Release 和推送步骤见 [docs/PUBLISHING.md](docs/PUBLISHING.md)。
