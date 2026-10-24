@@ -109,6 +109,19 @@ test('provider presets and key prefix detection configure settings', async ({ pa
   expect(settings.apiKey).toBe('gsk_test_key');
 });
 
+test('closing settings while a model picker is open needs only one click', async ({
+  page,
+}) => {
+  await page.getByRole('link', { name: '设置', exact: true }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+
+  await page.locator('#api-base-url').click();
+  await expect(page.getByRole('listbox', { name: '常用 API 服务' })).toBeVisible();
+
+  await page.getByRole('button', { name: '关闭', exact: true }).click();
+  await expect(page.getByRole('dialog')).toBeHidden();
+});
+
 test('settings dialog traps focus and restores it after closing', async ({ page }) => {
   const settingsLink = page.getByRole('link', { name: '设置', exact: true });
   await settingsLink.focus();

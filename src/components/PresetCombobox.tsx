@@ -72,14 +72,17 @@ export function PresetCombobox({
   useEffect(() => {
     if (!open) return;
 
-    const handlePointerDown = (event: PointerEvent) => {
+    const handleDocumentClick = (event: MouseEvent) => {
       const target = event.target;
       if (target instanceof Node && rootRef.current?.contains(target)) return;
+      // Close on click rather than pointerdown. If a click targets a modal
+      // button (e.g. Close/Save), that button must receive its click before
+      // this inline panel disappears and shifts the modal layout.
       setOpen(false);
     };
 
-    document.addEventListener('pointerdown', handlePointerDown);
-    return () => document.removeEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('click', handleDocumentClick);
+    return () => document.removeEventListener('click', handleDocumentClick);
   }, [open]);
 
   useEffect(() => {
