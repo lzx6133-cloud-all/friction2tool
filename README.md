@@ -17,9 +17,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CI](https://github.com/lzx6133-cloud-all/friction2tool/actions/workflows/ci.yml/badge.svg)](https://github.com/lzx6133-cloud-all/friction2tool/actions/workflows/ci.yml)
+[![Deploy](https://github.com/lzx6133-cloud-all/friction2tool/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/lzx6133-cloud-all/friction2tool/actions/workflows/deploy-pages.yml)
 
-> **Live Demo:** the Pages link becomes available after the first deployment of this repository.
->
 > **Status: experimental, local-first MVP.** Not production-ready. API Keys are stored
 > unencrypted in the visitor's browser, and browser-direct API calls require provider CORS.
 
