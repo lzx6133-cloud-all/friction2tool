@@ -123,31 +123,27 @@ npm run test:e2e
 `playwright.config.ts` 会在本地自动复用已运行的 dev server，在 CI 中自行启动。
 GitHub Actions 会在构建和部署前运行单元测试和端到端测试。
 
-## 部署到 GitHub Pages
+## 部署
 
-项目使用纯静态产物，不需要后端。已经准备好：
+本项目是纯静态应用，不需要后端：
+
+```bash
+npm run build
+```
+
+构建产物在 `dist/`，可部署到 GitHub Pages、Vercel、Netlify 或任意静态托管。
+当前仓库已配置：
 
 - [.github/workflows/ci.yml](.github/workflows/ci.yml)：类型检查、构建、单元测试和 Playwright 测试
-- [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml)：全部测试通过后部署 `dist/`
-- `vite.config.ts` 在生产构建中使用相对资源路径，兼容 GitHub Pages 的子路径
+- [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml)：推送到 `main` 后自动部署
+- 生产构建使用相对资源路径，兼容仓库子路径
+- 线上 Demo：https://lzx6133-cloud-all.github.io/friction2tool/
 
-发布步骤：
+仓库创建、Pages 设置、Social preview 和 Release 的详细步骤已移至
+[docs/PUBLISHING.md](docs/PUBLISHING.md)。
 
-1. 在 GitHub 创建公开仓库（建议名称 `friction2tool`）。
-2. 推送 `main` 分支。
-3. 打开仓库 **Settings → Pages → Build and deployment → Source**，选择 **GitHub Actions**。
-4. 手动运行一次 **Deploy to GitHub Pages** workflow，或向 `main` 推送一次。
-5. 部署地址通常是 `https://<你的用户名>.github.io/friction2tool/`。
-6. 首次部署完成后确认顶部 Live Demo 地址可访问。
-7. 在 **Settings → General → Social preview** 上传 [docs/social-preview.png](docs/social-preview.png)。
-
-完整的仓库创建、GitHub 设置、Release 和推送步骤见 [docs/PUBLISHING.md](docs/PUBLISHING.md)。
-
-Demo 默认使用 Mock 模式，访问者不需要 API Key。API 模式仍可由访问者自行配置，
-Key 只保存在访问者自己的浏览器中，不会进入你的仓库或构建产物。
-
-> 公开 Demo 部署在 HTTPS 环境，访问者浏览器中的本地 Ollama（HTTP localhost）通常会被
-> 混合内容限制拦截。Mock 模式不受影响。
+公开 Demo 的 API 模式由访问者自行配置 Key，Key 只保存在访问者浏览器中；
+HTTPS Demo 通常无法访问访问者本机的 HTTP Ollama，Mock 模式不受影响。
 
 ## 两种模式
 
