@@ -238,11 +238,10 @@ API Key:  随便填一个非空值，例如 ollama
   ```text
   default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline';
   img-src data: blob:; font-src data:; connect-src 'none';
-  form-action 'none'; base-uri 'none'; navigate-to 'none';
+  form-action 'none'; base-uri 'none';
   ```
 
-  即使模型生成了网络请求代码，也会被 CSP 拦截。CSP 还声明了 `navigate-to 'none'`，
-  但浏览器支持并不一致。
+  即使模型生成了网络请求代码，也会被 CSP 拦截。
 
   仍然存在无法由父页面完全消除的残余风险：生成代码可能让 iframe 自行导航，
   或通过死循环消耗 CPU。预览刷新按钮可以重建 iframe；不要把生成结果当作绝对安全的代码执行环境。
