@@ -7,7 +7,7 @@
 这是一个前端-only 的 MVP：**无登录、无后端、无数据库**。所有工具保存在浏览器 `localStorage`。
 
 <p>
-  <a href="https://lzx633-cloud-all.github.io/friction2tool/"><strong>Live Demo</strong></a> ·
+  <a href="https://lzx6133-cloud-all.github.io/friction2tool/"><strong>Live Demo</strong></a> ·
   <a href="#功能">功能</a> ·
   <a href="#快速开始">快速开始</a> ·
   <a href="#测试">测试</a> ·
@@ -16,7 +16,7 @@
 </p>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![CI](https://github.com/lzx633-cloud-all/friction2tool/actions/workflows/ci.yml/badge.svg)](https://github.com/lzx633-cloud-all/friction2tool/actions/workflows/ci.yml)
+[![CI](https://github.com/lzx6133-cloud-all/friction2tool/actions/workflows/ci.yml/badge.svg)](https://github.com/lzx6133-cloud-all/friction2tool/actions/workflows/ci.yml)
 
 > **Live Demo:** the Pages link becomes available after the first deployment of this repository.
 >

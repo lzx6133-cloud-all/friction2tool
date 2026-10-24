@@ -1,7 +1,7 @@
 # Publishing checklist
 
 This file covers the GitHub settings that cannot be stored in the repository.
-Repository URLs below assume the repository is `lzx633-cloud-all/friction2tool`.
+Repository URLs below assume the repository is `lzx6133-cloud-all/friction2tool`.
 
 ## 1. Local repository
 
@@ -35,7 +35,7 @@ ai, llm, react, vite, typescript, openai, local-first, micro-tools, single-file,
 Then push:
 
 ```bash
-git remote add origin https://github.com/lzx633-cloud-all/friction2tool.git
+git remote add origin https://github.com/lzx6133-cloud-all/friction2tool.git
 git push -u origin main
 ```
 
@@ -47,7 +47,7 @@ git push -u origin main
 4. The expected URL is:
 
 ```text
-https://lzx633-cloud-all.github.io/friction2tool/
+https://lzx6133-cloud-all.github.io/friction2tool/
 ```
 
 5. Confirm the Live Demo URL in `README.md` is reachable after deployment.
@@ -60,7 +60,7 @@ https://lzx633-cloud-all.github.io/friction2tool/
 - Optional badges, after the first Actions run:
 
 ```markdown
-[![CI](https://github.com/lzx633-cloud-all/friction2tool/actions/workflows/ci.yml/badge.svg)](https://github.com/lzx633-cloud-all/friction2tool/actions/workflows/ci.yml)
+[![CI](https://github.com/lzx6133-cloud-all/friction2tool/actions/workflows/ci.yml/badge.svg)](https://github.com/lzx6133-cloud-all/friction2tool/actions/workflows/ci.yml)
 ```
 
 ## 5. First release
