@@ -1,0 +1,45 @@
+{
+  "name": "friction2tool",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Turn a small everyday friction into a tiny, usable single-file web tool.",
+  "license": "MIT",
+  "author": "Friction2Tool contributors",
+  "keywords": [
+    "ai",
+    "llm",
+    "react",
+    "vite",
+    "typescript",
+    "openai",
+    "local-first",
+    "micro-tools"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --pretty false",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.6.0",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
+  }
+}
